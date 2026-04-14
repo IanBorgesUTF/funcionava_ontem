@@ -1,0 +1,117 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ===========================================
+// Modelagem do Banco de Dados para o Sistema de Doações
+// ===========================================
+
+model Voluntario {
+  id        Int      @id @default(autoincrement())
+  nome      String
+  email     String   @unique
+  // ATENÇÃO: A senha deve ser armazenada como um hash (ex: bcrypt)
+  senha     String
+  endereco  String?
+  telefone  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  doacoes       Doacao[]
+  distribuicoes Distribuicao[]
+}
+
+model Beneficiario {
+  id        Int      @id @default(autoincrement())
+  nome      String
+  cpf       String   @unique
+  telefone  String?
+  endereco  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  distribuicoes Distribuicao[]
+}
+
+model Doacao {
+  id           Int      @id @default(autoincrement())
+  data         DateTime @default(now())
+  voluntarioId Int
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  voluntario Voluntario   @relation(fields: [voluntarioId], references: [id])
+  itens      ItemDoacao[]
+}
+
+model ItemDoacao {
+  id         Int @id @default(autoincrement())
+  quantidade Int
+  doacaoId   Int
+  itemId     Int
+
+  doacao Doacao @relation(fields: [doacaoId], references: [id])
+  item   Item   @relation(fields: [itemId], references: [id])
+}
+
+model Distribuicao {
+  id             Int      @id @default(autoincrement())
+  data           DateTime @default(now())
+  voluntarioId   Int
+  beneficiarioId Int
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  voluntario   Voluntario         @relation(fields: [voluntarioId], references: [id])
+  beneficiario Beneficiario       @relation(fields: [beneficiarioId], references: [id])
+  itens        ItemDistribuicao[]
+}
+
+model ItemDistribuicao {
+  id             Int @id @default(autoincrement())
+  quantidade     Int
+  distribuicaoId Int
+  itemId         Int
+
+  distribuicao Distribuicao @relation(fields: [distribuicaoId], references: [id])
+  item         Item         @relation(fields: [itemId], references: [id])
+}
+
+model Item {
+  id                Int      @id @default(autoincrement())
+  quantidadeEstoque Int      @map("quantidade")
+  tipoId            Int
+  tamanhoId         Int
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  tipo     Tipo               @relation(fields: [tipoId], references: [id])
+  tamanho  Tamanho            @relation(fields: [tamanhoId], references: [id])
+  entradas ItemDoacao[]
+  saidas   ItemDistribuicao[]
+}
+
+model Tipo {
+  id        Int    @id @default(autoincrement())
+  descricao String @unique
+
+  tamanhos Tamanho[]
+  itens    Item[]
+}
+
+model Tamanho {
+  id        Int    @id @default(autoincrement())
+  descricao String
+  tipoId    Int
+
+  tipo  Tipo   @relation(fields: [tipoId], references: [id])
+  itens Item[]
+
+  @@unique([descricao, tipoId])
+}

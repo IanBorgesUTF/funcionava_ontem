@@ -1,0 +1,43 @@
+services:
+  # Serviço do Banco de Dados PostgreSQL
+  db:
+    image: postgres:15-alpine
+    container_name: postgres_db
+    restart: always # Reinicia o container se ele parar
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    ports:
+      - "5432:5432" # Mapeia a porta do container para a porta do computador
+    volumes:
+      - postgres_data:/var/lib/postgresql/data # Persiste os dados do banco de dados
+
+  # Serviço da Aplicação
+  app:
+    container_name: express_app
+    build:
+      context: .
+      dockerfile: Dockerfile.dev # Use Dockerfile.dev para desenvolvimento ou Dockerfile para produção
+    ports:
+      - "3000:3000"
+      - "5555:5555" # Porta do Prisma Studio
+    env_file:
+      - .env
+    depends_on:
+      - db
+    # Comente as linhas abaixo em produção
+    volumes:
+      - .:/usr/src/app:z
+      - /usr/src/app/node_modules
+    command: npm run dev
+    # Fim do bloco de desenvolvimento
+
+    # Descomente as linhas abaixo em produção
+    # entrypoint: [ "/usr/src/app/docker-entrypoint.sh" ]
+    # command: node dist/server.js
+
+volumes:
+  postgres_data:
