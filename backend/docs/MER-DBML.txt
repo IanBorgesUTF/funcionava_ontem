@@ -1,0 +1,133 @@
+// ===========================================
+// Projeto: Sistema de Doações SANEM
+// Gerado a partir do schema.prisma fornecido
+// ===========================================
+
+Table Voluntario {
+  id int [pk, increment]
+  nome varchar [not null]
+  email varchar [unique, not null]
+  admin boolean [not null, default: false]
+  senha varchar [not null, note: "Hash da senha (bcrypt)"]
+  endereco varchar
+  telefone varchar
+  dataCriacao datetime [not null, default: `now()`]
+  dataAtualizacao datetime [not null]
+}
+
+Table CartaoBeneficiario {
+  id int [pk, increment]
+  numeroCartao varchar [unique, not null]
+  dataValidade datetime [not null]
+  ativo boolean [not null, default: false]
+  codigoSeguranca varchar [not null, note: "Senha de acesso do app"]
+  beneficiarioId int [unique, not null] // Relação 1:1 estrita devido ao @unique
+  dataCriacao datetime [not null, default: `now()`]
+  dataAtualizacao datetime [not null]
+}
+
+Table Beneficiario {
+  id int [pk, increment]
+  nome varchar [not null]
+  cpf varchar [unique, not null]
+  telefone varchar
+  endereco varchar
+  limiteItens int [not null, default: 0, note: "0 = sem limite"]
+  dataCriacao datetime [not null, default: `now()`]
+  dataAtualizacao datetime [not null]
+}
+
+Table Doacao {
+  id int [pk, increment]
+  voluntarioId int [not null]
+  dataCriacao datetime [not null, default: `now()`]
+  dataAtualizacao datetime [not null]
+}
+
+Table ItemDoacao {
+  id int [pk, increment]
+  quantidade int [not null]
+  doacaoId int [not null]
+  itemId int [not null]
+}
+
+Table Distribuicao {
+  id int [pk, increment]
+  voluntarioId int [not null]
+  beneficiarioId int [not null]
+  dataCriacao datetime [not null, default: `now()`]
+  dataAtualizacao datetime [not null]
+}
+
+Table ItemDistribuicao {
+  id int [pk, increment]
+  quantidade int [not null]
+  distribuicaoId int [not null]
+  itemId int [not null]
+}
+
+Table Item {
+  id int [pk, increment]
+  quantidade int [not null, note: "Mapeado de quantidadeEstoque"]
+  condicaoId int [not null]
+  tipoId int [not null]
+  tamanhoId int [not null]
+  dataCriacao datetime [not null, default: `now()`]
+  dataAtualizacao datetime [not null]
+
+  // Garante unicidade do item no catálogo
+  Indexes {
+    (tipoId, tamanhoId, condicaoId) [unique]
+  }
+}
+
+Table Tipo {
+  id int [pk, increment]
+  descricao varchar [unique, not null]
+}
+
+Table Tamanho {
+  id int [pk, increment]
+  descricao varchar [not null]
+  tipoId int [not null]
+
+  // Garante que não exista o mesmo tamanho duplicado para o mesmo tipo
+  Indexes {
+    (descricao, tipoId) [unique]
+  }
+}
+
+Table Condicao {
+  id int [pk, increment]
+  descricao varchar [unique, not null]
+}
+
+// ===========================================
+// Relacionamentos (Foreign Keys)
+// ===========================================
+
+// Um cartão pertence a um único beneficiário (1:1)
+Ref: CartaoBeneficiario.beneficiarioId - Beneficiario.id
+
+// Doações e Voluntários
+Ref: Doacao.voluntarioId > Voluntario.id
+
+// Itens da Doação
+Ref: ItemDoacao.doacaoId > Doacao.id
+Ref: ItemDoacao.itemId > Item.id
+
+// Distribuições
+Ref: Distribuicao.voluntarioId > Voluntario.id
+Ref: Distribuicao.beneficiarioId > Beneficiario.id
+
+// Itens da Distribuição
+Ref: ItemDistribuicao.distribuicaoId > Distribuicao.id
+Ref: ItemDistribuicao.itemId > Item.id
+
+// Definição do Item (Catálogo)
+Ref: Item.tipoId > Tipo.id
+Ref: Item.tamanhoId > Tamanho.id
+Ref: Item.condicaoId > Condicao.id
+
+// Dependência de Tamanho
+Ref: Tamanho.tipoId > Tipo.id

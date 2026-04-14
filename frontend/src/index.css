@@ -1,0 +1,126 @@
+@import url("https://fonts.googleapis.com/css2?family=Archivo+Black&family=Averia+Gruesa+Libre&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap");
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  /* --Paleta de Cores-- */
+
+  --background-color: #fcfeff;
+  --background-color-rgb: 252, 254, 255;
+  --primary-color: #084c61;
+  --secondary-color: #4f6d7a;
+  --tertiary-color: #56a3a6;
+  --error-color: #db504a;
+  --warning-color: #e3b505;
+  --text-color: #0e131f;
+  --button-text-color: #fcfeff;
+  --success-color: #2e8b57;
+}
+
+/* --Fontes-- */
+
+.destaque-archivo-black {
+  font-family: "Archivo Black", sans-serif;
+  font-weight: 400;
+}
+
+.destaque-averia {
+  font-family: "Averia Gruesa Libre", system-ui;
+  font-weight: 400;
+}
+
+.basetext-inter {
+  font-family: "Inter", sans-serif;
+  font-optical-sizing: auto;
+}
+
+/* --Mensagem Toast-- */
+.toast-container {
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 1000;
+}
+
+.toast {
+  padding: 14px 16px;
+  border-radius: 10px;
+  min-width: 260px;
+  max-width: 420px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
+  font-size: 14px;
+  font-family: "Inter", sans-serif;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  align-items: start;
+  border: 2px solid transparent;
+  color: #0e131f;
+}
+
+.toast-icon {
+  margin-top: 2px;
+}
+
+.toast-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.toast-title {
+  margin: 0;
+  font-size: 13px;
+}
+
+.toast-message {
+  margin: 0;
+  font-size: 13px;
+}
+
+.toast-info {
+  background: #e7f1ff;
+  border-color: #1f6feb;
+}
+
+.toast-success {
+  background: #e6f6ee;
+  border-color: #2e8b57;
+}
+
+.toast-error {
+  background: #fdeaea;
+  border-color: #d11d2a;
+}
+
+.toast-warning {
+  background: #fff6e5;
+  border-color: #d48806;
+}
+
+.toast-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.toast-close {
+  border: none;
+  background: transparent;
+  padding: 2px;
+  cursor: pointer;
+  color: inherit;
+}
+
+.toast-close:hover {
+  background: transparent;
+  opacity: 0.7;
+}

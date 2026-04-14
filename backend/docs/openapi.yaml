@@ -1,0 +1,1932 @@
+openapi: 3.1.0
+info:
+  title: Sistema de Doações SANEM
+  version: 2.0.0
+  description: |
+    Documentação da API RESTful para o sistema de gerenciamento de doações da SANEM.
+servers:
+  - url: http://localhost:{port}
+    description: Servidor de Desenvolvimento Local
+    variables:
+      port:
+        default: "3000"
+        description: Porta configurada da aplicação
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Autenticação
+    description: Login e emissão de tokens JWT
+  - name: Voluntários
+    description: Gestão de voluntários do sistema
+  - name: Tipos
+    description: Gestão de tipos de itens
+  - name: Tamanhos
+    description: Gestão de tamanhos vinculados a tipos
+  - name: Condições
+    description: Gestão das condições de conservação
+  - name: Itens
+    description: Consulta e atualização de itens em estoque
+  - name: Beneficiários
+    description: Gestão de beneficiários
+  - name: Doações
+    description: Registro e consulta de doações
+  - name: Cartões
+    description: Gestão de cartões de beneficiários
+  - name: Distribuições
+    description: Saída de itens para beneficiários
+  - name: Dashboard
+    description: Indicadores consolidados para visão geral
+  - name: Relatórios
+    description: Relatórios de movimentações (entradas e saídas)
+
+paths:
+  /:
+    get:
+      summary: Healthcheck simples
+      description: |
+        Retorna um objeto com "Hello": "World" para indicar que a API está de pé.
+      security: []
+      responses:
+        '200':
+          description: API disponível
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  Hello:
+                    type: string
+                    example: World
+
+  /auth/login:
+    post:
+      tags: [Autenticação]
+      summary: Autentica um usuário e retorna um token JWT
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, senha]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: admin@sanem.com
+                senha:
+                  type: string
+                  format: password
+                  example: admin123
+      responses:
+        '200':
+          description: Login bem-sucedido
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Login bem-sucedido!
+                  token:
+                    type: string
+                  voluntario:
+                    $ref: '#/components/schemas/Voluntario'
+        '400':
+          description: Erro de validação
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '401':
+          description: Credenciais inválidas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '500':
+          description: Erro interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+
+  /voluntarios:
+    get:
+      tags: [Voluntários]
+      summary: Lista voluntários (requer token)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lista de voluntários sem senha
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Voluntario'
+        '401':
+          description: Não autenticado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '500':
+          description: Erro interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+    post:
+      tags: [Voluntários]
+      summary: Cria um voluntário (apenas admin)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VoluntarioInput'
+      responses:
+        '201':
+          description: Voluntário criado (sem senha)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Voluntario'
+        '400':
+          description: Erro de validação
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '401':
+          description: Não autenticado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '403':
+          description: Não autorizado (não admin)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '409':
+          description: Email já cadastrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '500':
+          description: Erro interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+
+  /voluntarios/{id}:
+    get:
+      tags: [Voluntários]
+      summary: Busca voluntário por ID (requer token)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Voluntário encontrado (sem senha)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Voluntario'
+        '401':
+          description: Não autenticado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '404':
+          description: Não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '500':
+          description: Erro interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+    put:
+      tags: [Voluntários]
+      summary: Atualiza voluntário (apenas admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VoluntarioUpdate'
+      responses:
+        '200':
+          description: Voluntário atualizado (sem senha)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Voluntario'
+        '400':
+          description: Erro de validação
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '401':
+          description: Não autenticado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '403':
+          description: Não autorizado (não admin)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '404':
+          description: Não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '500':
+          description: Erro interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+    delete:
+      tags: [Voluntários]
+      summary: Remove voluntário (apenas admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Removido com sucesso
+        '401':
+          description: Não autenticado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '403':
+          description: Não autorizado (não admin)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '404':
+          description: Não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '500':
+          description: Erro interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+
+  /tipos:
+    security:
+      - bearerAuth: []
+    get:
+      tags: [Tipos]
+      summary: Lista todos os tipos de itens
+      responses:
+        '200':
+          description: Lista de tipos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Tipo'
+        '500':
+          description: Erro ao buscar os tipos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+    post:
+      tags: [Tipos]
+      summary: Cria um novo tipo de item
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [descricao]
+              properties:
+                descricao:
+                  type: string
+                  example: Brinquedo
+      responses:
+        '201':
+          description: Tipo criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tipo'
+        '400':
+          description: Erro de validação
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '409':
+          description: Tipo já existe
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '500':
+          description: Erro interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+
+  /tipos/{id}:
+    security:
+      - bearerAuth: []
+    get:
+      tags: [Tipos]
+      summary: Busca um tipo por ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Tipo encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tipo'
+        '404':
+          description: Não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '500':
+          description: Erro interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+    put:
+      tags: [Tipos]
+      summary: Atualiza um tipo
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [descricao]
+              properties:
+                descricao:
+                  type: string
+                  example: Calçado Esportivo
+      responses:
+        '200':
+          description: Tipo atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tipo'
+        '400':
+          description: Erro de validação
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '404':
+          description: Não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '409':
+          description: Já existe outro tipo com essa descrição
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '500':
+          description: Erro interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+    delete:
+      tags: [Tipos]
+      summary: Remove um tipo
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Removido com sucesso
+        '404':
+          description: Não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '409':
+          description: Tipo em uso e não pode ser removido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '500':
+          description: Erro interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+
+  /tamanhos:
+    security:
+      - bearerAuth: []
+    get:
+      tags: [Tamanhos]
+      summary: Lista todos os tamanhos
+      parameters:
+        - in: query
+          name: tipoId
+          schema:
+            type: integer
+          description: Filtra por tipo
+      responses:
+        '200':
+          description: Lista de tamanhos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Tamanho'
+        '500':
+          description: Erro ao buscar tamanhos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+    post:
+      tags: [Tamanhos]
+      summary: Cria um novo tamanho
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [descricao, tipoId]
+              properties:
+                descricao:
+                  type: string
+                  example: 42
+                tipoId:
+                  type: integer
+                  example: 2
+      responses:
+        '201':
+          description: Tamanho criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tamanho'
+        '400':
+          description: Erro de validação ou tipo inexistente
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/ValidationErrorResponse'
+                  - $ref: '#/components/schemas/MessageResponse'
+        '409':
+          description: Tamanho já existe para o tipo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '500':
+          description: Erro interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+
+  /tamanhos/{id}:
+    security:
+      - bearerAuth: []
+    get:
+      tags: [Tamanhos]
+      summary: Busca um tamanho por ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Tamanho encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tamanho'
+        '404':
+          description: Não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '500':
+          description: Erro interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+    put:
+      tags: [Tamanhos]
+      summary: Atualiza um tamanho
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [descricao, tipoId]
+              properties:
+                descricao:
+                  type: string
+                  example: GG
+                tipoId:
+                  type: integer
+                  example: 1
+      responses:
+        '200':
+          description: Tamanho atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tamanho'
+        '400':
+          description: Erro de validação ou lógica
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/ValidationErrorResponse'
+                  - $ref: '#/components/schemas/MessageResponse'
+        '404':
+          description: Não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '409':
+          description: Combinação já existente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '500':
+          description: Erro interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+    delete:
+      tags: [Tamanhos]
+      summary: Remove um tamanho
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Removido com sucesso
+        '400':
+          description: Em uso e não pode ser removido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '404':
+          description: Não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '500':
+          description: Erro interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+
+  /condicoes:
+    security:
+      - bearerAuth: []
+    get:
+      tags: [Condições]
+      summary: Lista todas as condições
+      responses:
+        '200':
+          description: Lista de condições
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Condicao'
+        '500':
+          description: Erro ao buscar condições
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+    post:
+      tags: [Condições]
+      summary: Cria uma nova condição
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [descricao]
+              properties:
+                descricao:
+                  type: string
+                  example: Novo
+      responses:
+        '201':
+          description: Condição criada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Condicao'
+        '400':
+          description: Erro de validação
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '409':
+          description: Condição já existe
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '500':
+          description: Erro interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+
+  /condicoes/{id}:
+    security:
+      - bearerAuth: []
+    get:
+      tags: [Condições]
+      summary: Busca uma condição por ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Condição encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Condicao'
+        '404':
+          description: Não encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '500':
+          description: Erro interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+    put:
+      tags: [Condições]
+      summary: Atualiza uma condição
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [descricao]
+              properties:
+                descricao:
+                  type: string
+                  example: Usado - Bom estado
+      responses:
+        '200':
+          description: Condição atualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Condicao'
+        '400':
+          description: Erro de validação
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '404':
+          description: Não encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '409':
+          description: Descrição já usada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '500':
+          description: Erro interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+    delete:
+      tags: [Condições]
+      summary: Remove uma condição
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Removida com sucesso
+        '400':
+          description: Em uso e não pode ser removida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '404':
+          description: Não encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '500':
+          description: Erro interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+
+  /itens:
+    get:
+      tags: [Itens]
+      summary: Lista todos os itens em estoque
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lista de itens
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ItemDetalhe'
+        '500':
+          description: Erro ao buscar itens
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+
+  /itens/{id}:
+    get:
+      tags: [Itens]
+      summary: Busca um item por ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Item encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemDetalhe'
+        '404':
+          description: Não encontrado
+        '500':
+          description: Erro interno
+
+  /itens/{id}/quantidade:
+    patch:
+      tags: [Itens]
+      summary: Atualiza apenas a quantidade de um item
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ItemQuantidadeInput'
+      responses:
+        '200':
+          description: Quantidade atualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemDetalhe'
+        '400':
+          description: Erro de validação
+        '404':
+          description: Item não encontrado
+        '500':
+          description: Erro interno
+
+  /dashboard:
+    get:
+      tags: [Dashboard]
+      summary: Retorna métricas consolidadas do sistema
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Métricas do dashboard
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardMetrics'
+        '401':
+          description: Não autenticado
+        '500':
+          description: Erro interno
+
+  /relatorios/movimentacoes:
+    get:
+      tags: [Relatórios]
+      summary: Gera relatório de entradas (doações) e saídas (distribuições)
+      description: Retorna um relatório consolidado; parâmetros de data são opcionais.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: inicio
+          schema:
+            type: string
+          description: Data inicial no formato dd/mm/aaaa (ou ISO opcional)
+        - in: query
+          name: fim
+          schema:
+            type: string
+          description: Data final no formato dd/mm/aaaa (ou ISO opcional)
+        - in: query
+          name: formato
+          schema:
+            type: string
+            enum: [json, pdf]
+            default: json
+          description: "Define o formato de saída. Use `pdf` ou o header `Accept: application/pdf` para baixar o relatório."
+      responses:
+        '200':
+          description: Relatório de movimentações
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MovimentacoesReport'
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: Parâmetros inválidos
+        '500':
+          description: Erro interno
+
+  /beneficiarios:
+    security:
+      - bearerAuth: []
+    get:
+      tags: [Beneficiários]
+      summary: Lista todos os beneficiários
+      responses:
+        '200':
+          description: Lista de beneficiários
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Beneficiario'
+        '500':
+          description: Erro ao buscar beneficiários
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+    post:
+      tags: [Beneficiários]
+      summary: Cria um novo beneficiário
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BeneficiarioInput'
+      responses:
+        '201':
+          description: Beneficiário criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Beneficiario'
+        '400':
+          description: Erro de validação
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '409':
+          description: CPF já cadastrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '500':
+          description: Erro interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+
+  /beneficiarios/{id}:
+    security:
+      - bearerAuth: []
+    get:
+      tags: [Beneficiários]
+      summary: Busca um beneficiário por ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Beneficiário encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Beneficiario'
+        '404':
+          description: Não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '500':
+          description: Erro interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+    put:
+      tags: [Beneficiários]
+      summary: Atualiza um beneficiário
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BeneficiarioInput'
+      responses:
+        '200':
+          description: Beneficiário atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Beneficiario'
+        '400':
+          description: Erro de validação
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '404':
+          description: Não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '409':
+          description: CPF já cadastrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '500':
+          description: Erro interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+    delete:
+      tags: [Beneficiários]
+      summary: Remove um beneficiário
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Removido com sucesso
+        '400':
+          description: Beneficiário em uso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '404':
+          description: Não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '500':
+          description: Erro interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+
+  /doacoes:
+    get:
+      tags: [Doações]
+      summary: Lista todas as doações
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lista de doações
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Doacao'
+        '500':
+          description: Erro ao buscar doações
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+    post:
+      tags: [Doações]
+      summary: Cria uma nova doação
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DoacaoInput'
+      responses:
+        '201':
+          description: Doação criada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Doacao'
+        '400':
+          description: Erro de validação ou dados inconsistentes
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/ValidationErrorResponse'
+                  - $ref: '#/components/schemas/MessageResponse'
+        '404':
+          description: Voluntário do token não encontrado ou algum item referenciado não existe
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '500':
+          description: Erro interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+
+  /doacoes/{id}:
+    get:
+      tags: [Doações]
+      summary: Busca uma doação por ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Doação encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Doacao'
+        '404':
+          description: Não encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '500':
+          description: Erro interno
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MessageResponse'
+    delete:
+      tags: [Doações]
+      summary: Remove uma doação
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Removida com sucesso
+        '404':
+          description: Não encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '500':
+          description: Erro interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+
+  /cartoes:
+    post:
+      tags: [Cartões]
+      summary: Cria um novo cartão para um beneficiário
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [beneficiarioId]
+              properties:
+                beneficiarioId:
+                  type: integer
+                  example: 1
+      responses:
+        '201':
+          description: Cartão criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cartao'
+        '404':
+          description: Beneficiário não encontrado
+        '409':
+          description: Beneficiário já possui cartão
+        '500':
+          description: Erro interno
+    get:
+      tags: [Cartões]
+      summary: Lista todos os cartões
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lista de cartões
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CartaoComBeneficiario'
+        '500':
+          description: Erro interno
+
+  /cartoes/beneficiario/{beneficiarioId}:
+    get:
+      tags: [Cartões]
+      summary: Busca cartão por beneficiário
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: beneficiarioId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Cartão encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CartaoComBeneficiario'
+        '404':
+          description: Não encontrado
+        '500':
+          description: Erro interno
+
+  /cartoes/{id}/status:
+    patch:
+      tags: [Cartões]
+      summary: Atualiza status do cartão
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ativo]
+              properties:
+                ativo:
+                  type: boolean
+      responses:
+        '200':
+          description: Status atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cartao'
+        '404':
+          description: Cartão não encontrado
+        '500':
+          description: Erro interno
+
+  /cartoes/{id}:
+    delete:
+      tags: [Cartões]
+      summary: Remove um cartão
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Removido com sucesso
+        '404':
+          description: Não encontrado
+        '500':
+          description: Erro interno
+
+  /distribuicoes:
+    post:
+      tags: [Distribuições]
+      summary: Registra uma nova distribuição
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DistribuicaoInput'
+      responses:
+        '201':
+          description: Distribuição registrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Distribuicao'
+        '400':
+          description: Dados inválidos, cartão do beneficiário inválido/inativo, limite de itens excedido ou item inexistente/sem estoque para a combinação de tipo, tamanho e condição.
+        '500':
+          description: Erro interno
+    get:
+      tags: [Distribuições]
+      summary: Lista distribuições
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lista de distribuições
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DistribuicaoDetalhe'
+        '500':
+          description: Erro interno
+
+  /distribuicoes/{id}:
+    get:
+      tags: [Distribuições]
+      summary: Busca distribuição por ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Distribuição encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DistribuicaoDetalhe'
+        '404':
+          description: Não encontrada
+        '500':
+          description: Erro interno
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+    ValidationIssue:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        path:
+          type: array
+          items:
+            type: string
+        expected:
+          type: string
+          nullable: true
+        received:
+          type: string
+          nullable: true
+    ValidationErrorResponse:
+      type: object
+      properties:
+        Erro de Validação:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationIssue'
+    Voluntario:
+      type: object
+      properties:
+        id:
+          type: integer
+        nome:
+          type: string
+        email:
+          type: string
+          format: email
+        admin:
+          type: boolean
+        endereco:
+          type: string
+          nullable: true
+        telefone:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    VoluntarioInput:
+      type: object
+      required: [nome, email, senha]
+      properties:
+        nome:
+          type: string
+          example: Ana Souza
+        email:
+          type: string
+          format: email
+          example: ana@sanem.com
+        senha:
+          type: string
+          format: password
+          example: senha123
+        admin:
+          type: boolean
+          example: false
+        endereco:
+          type: string
+          nullable: true
+          example: Rua das Flores, 123
+        telefone:
+          type: string
+          nullable: true
+          example: 11999998888
+    VoluntarioUpdate:
+      type: object
+      properties:
+        nome:
+          type: string
+        email:
+          type: string
+          format: email
+        senha:
+          type: string
+          format: password
+        admin:
+          type: boolean
+        endereco:
+          type: string
+          nullable: true
+        telefone:
+          type: string
+          nullable: true
+    Tipo:
+      type: object
+      properties:
+        id:
+          type: integer
+        descricao:
+          type: string
+    Tamanho:
+      type: object
+      properties:
+        id:
+          type: integer
+        descricao:
+          type: string
+        tipoId:
+          type: integer
+    Condicao:
+      type: object
+      properties:
+        id:
+          type: integer
+        descricao:
+          type: string
+    Beneficiario:
+      type: object
+      properties:
+        id:
+          type: integer
+        nome:
+          type: string
+        cpf:
+          type: string
+        telefone:
+          type: string
+          nullable: true
+        endereco:
+          type: string
+          nullable: true
+        limiteItens:
+          type: integer
+          description: Limite máximo de itens que o beneficiário pode receber (0 = sem limite)
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    BeneficiarioInput:
+      type: object
+      required: [nome, cpf]
+      properties:
+        nome:
+          type: string
+          example: Jose da Silva
+        cpf:
+          type: string
+          description: Somente números
+          example: '11122233344'
+        telefone:
+          type: string
+          example: '11912345678'
+          nullable: true
+        endereco:
+          type: string
+          example: 'Rua das Flores, 123'
+          nullable: true
+        limiteItens:
+          type: integer
+          description: 0 para sem limite; maior que 0 para limitar
+    ItemCatalog:
+      type: object
+      properties:
+        id:
+          type: integer
+        quantidadeEstoque:
+          type: integer
+        condicaoId:
+          type: integer
+        tipoId:
+          type: integer
+        tamanhoId:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    ItemDetalhe:
+      type: object
+      properties:
+        id:
+          type: integer
+        quantidadeEstoque:
+          type: integer
+        tipo:
+          type: object
+          properties:
+            id:
+              type: integer
+            descricao:
+              type: string
+        tamanho:
+          type: object
+          properties:
+            id:
+              type: integer
+            descricao:
+              type: string
+        condicao:
+          type: object
+          properties:
+            id:
+              type: integer
+            descricao:
+              type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    ItemQuantidadeInput:
+      type: object
+      required: [quantidade]
+      properties:
+        quantidade:
+          type: integer
+          minimum: 0
+    DashboardMetrics:
+      type: object
+      properties:
+        voluntarios:
+          type: integer
+        beneficiarios:
+          type: integer
+        doacoes:
+          type: integer
+        distribuicoes:
+          type: integer
+        estoqueTotal:
+          type: integer
+        itensBaixoEstoque:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              quantidadeEstoque:
+                type: integer
+              tipo:
+                type: object
+                properties:
+                  descricao:
+                    type: string
+              tamanho:
+                type: object
+                properties:
+                  descricao:
+                    type: string
+              condicao:
+                type: object
+                properties:
+                  descricao:
+                    type: string
+    MovimentacoesReport:
+      type: object
+      properties:
+        periodo:
+          type: object
+          properties:
+            inicio:
+              type: string
+              format: date-time
+              nullable: true
+            fim:
+              type: string
+              format: date-time
+              nullable: true
+        resumo:
+          type: object
+          properties:
+            totalEntradas:
+              type: number
+            totalSaidas:
+              type: number
+        doacoes:
+          type: array
+          items:
+            $ref: '#/components/schemas/Doacao'
+        distribuicoes:
+          type: array
+          items:
+            $ref: '#/components/schemas/DistribuicaoDetalhe'
+    ItemDoacao:
+      type: object
+      properties:
+        doacaoId:
+          type: integer
+        itemId:
+          type: integer
+        quantidade:
+          type: number
+    ItemDoacaoDetalhado:
+      allOf:
+        - $ref: '#/components/schemas/ItemDoacao'
+        - type: object
+          properties:
+            id:
+              type: integer
+            item:
+              $ref: '#/components/schemas/ItemCatalog'
+    Doacao:
+      type: object
+      properties:
+        id:
+          type: integer
+        voluntarioId:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        itens:
+          type: array
+          items:
+            $ref: '#/components/schemas/ItemDoacaoDetalhado'
+    DoacaoInput:
+      type: object
+      required: [itens]
+      properties:
+        itens:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required: [tipoId, tamanhoId, condicaoId, quantidade]
+            properties:
+              tipoId:
+                type: integer
+              tamanhoId:
+                type: integer
+              condicaoId:
+                type: integer
+              quantidade:
+                type: number
+    Cartao:
+      type: object
+      properties:
+        id:
+          type: integer
+        numeroCartao:
+          type: string
+        dataValidade:
+          type: string
+          format: date-time
+        codigoSeguranca:
+          type: string
+        ativo:
+          type: boolean
+        beneficiarioId:
+          type: integer
+    CartaoComBeneficiario:
+      allOf:
+        - $ref: '#/components/schemas/Cartao'
+        - type: object
+          properties:
+            beneficiario:
+              type: object
+              properties:
+                nome:
+                  type: string
+                cpf:
+                  type: string
+    ItemDistribuicaoInput:
+      type: object
+      required: [tipoId, tamanhoId, condicaoId, quantidade]
+      properties:
+        tipoId:
+          type: integer
+        tamanhoId:
+          type: integer
+        condicaoId:
+          type: integer
+        quantidade:
+          type: integer
+    DistribuicaoInput:
+      type: object
+      required: [beneficiarioId, cartaoNumero, itens]
+      properties:
+        beneficiarioId:
+          type: integer
+        cartaoNumero:
+          type: string
+          description: Número do cartão ativo do beneficiário (somente dígitos)
+        itens:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/ItemDistribuicaoInput'
+    Distribuicao:
+      type: object
+      properties:
+        id:
+          type: integer
+        voluntarioId:
+          type: integer
+        beneficiarioId:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+    ItemDistribuicaoDetalhe:
+      type: object
+      properties:
+        quantidade:
+          type: integer
+        item:
+          type: object
+          properties:
+            id:
+              type: integer
+            tipo:
+              type: object
+              properties:
+                descricao:
+                  type: string
+            tamanho:
+              type: object
+              properties:
+                descricao:
+                  type: string
+            condicao:
+              type: object
+              properties:
+                descricao:
+                  type: string
+    DistribuicaoDetalhe:
+      allOf:
+        - $ref: '#/components/schemas/Distribuicao'
+        - type: object
+          properties:
+            voluntario:
+              type: object
+              properties:
+                nome:
+                  type: string
+            beneficiario:
+              type: object
+              properties:
+                nome:
+                  type: string
+            itens:
+              type: array
+              items:
+                $ref: '#/components/schemas/ItemDistribuicaoDetalhe'
