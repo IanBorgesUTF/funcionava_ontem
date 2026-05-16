@@ -35,7 +35,8 @@ export function AppRoutes() {
             <Route path="/home/condicoes" element={<Condicoes />} />
             <Route path="/home/itens" element={<Itens />} />
             <Route path="/home/beneficiarios" element={<Beneficiarios />} />
-            <Route path="/home/voluntarios" element={<Voluntarios />} />
+            <Route path="/home/voluntarios" element={<Voluntarios showAdminActions={false} />} />
+            <Route path="/home/voluntarios/admin" element={<Voluntarios showAdminActions={true} />} />
             <Route path="/home/cartoes" element={<Cartoes />} />
             <Route path="/home/doacoes" element={<Doacoes />} />
             <Route path="/home/doacoes/nova" element={<NovaDoacao />} />

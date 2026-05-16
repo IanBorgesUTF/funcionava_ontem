@@ -88,8 +88,8 @@ function Home() {
       ? [
           {
             title: "Administração",
-            links: [
-              { label: "Voluntários", to: "/home/voluntarios", icon: Users },
+              links: [
+              { label: "Voluntários", to: "/home/voluntarios/admin", icon: Users },
               { label: "Cartões", to: "/home/cartoes", icon: ClipboardList },
             ],
           },

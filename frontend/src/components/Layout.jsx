@@ -227,7 +227,7 @@ export default function Layout({ children }) {
             <AccordionItem
               title="Administração"
               links={[
-                { label: "Voluntários", to: "/home/voluntarios" },
+                { label: "Voluntários", to: "/home/voluntarios/admin" },
                 { label: "Cartões", to: "/home/cartoes" },
               ]}
               isOpen={!!openSections["Administração"]}
