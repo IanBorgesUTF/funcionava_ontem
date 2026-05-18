@@ -7,10 +7,10 @@ import { Search, Edit3, Trash2, Plus, Save, RefreshCw } from "lucide-react";
 import "./style.css";
 import Pagination from "../../components/Pagination";
 
-export default function Voluntarios() {
+export default function Voluntarios({ showAdminActions }) {
   const { user } = useAuth();
   const { addToast } = useToast();
-  const isAdmin = !!user?.admin;
+  const isAdmin = showAdminActions !== undefined ? !!showAdminActions : !!user?.admin;
 
   const [voluntarios, setVoluntarios] = useState([]);
   const [loading, setLoading] = useState(false);
