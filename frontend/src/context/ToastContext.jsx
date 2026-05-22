@@ -16,6 +16,10 @@ export function ToastProvider({ children }) {
     toastIdCounter += 1;
     const id = toastIdCounter;
     setToasts((current) => [...current, { id, message, type }]);
+
+    setTimeout(() => {
+      removeToast(id);
+    }, 5000);
   }, [removeToast]);
 
   const value = useMemo(() => ({ addToast, removeToast }), [addToast, removeToast]);
