@@ -156,6 +156,8 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+  overflow-y: auto;
+  overflow-x: hidden;
   z-index: 2;
   transition: transform 0.2s ease, width 0.2s ease, padding 0.2s ease;
 }
