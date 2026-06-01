@@ -95,11 +95,21 @@ export default function Tamanhos() {
       addToast("Informe a nova descrição.", "warning");
       return;
     }
+
+    const tamanhoParaAtualizar = tamanhos.find((t) => t.id === id);
+    if (!tamanhoParaAtualizar) {
+      addToast("Tamanho não encontrado.", "error");
+      return;
+    }
+
     setSubmitting(true);
     try {
       const { data } = await api.put(
         `/item/tamanhos/${id}`,
-        { descricao: editDescricao.trim() },
+        {
+          descricao: editDescricao.trim(),
+          tipoId: tamanhoParaAtualizar.tipoId,
+        },
         { headers }
       );
       setTamanhos((prev) => prev.map((t) => (t.id === id ? data : t)));
