@@ -238,14 +238,21 @@ export const getMovimentacoesController = async (req: Request, res: Response) =>
       if (raw.includes('/')) {
         const [d, m, y] = raw.split('/');
         const parsed = new Date(Number(y), Number(m) - 1, Number(d));
-        return isNaN(parsed.getTime()) ? undefined : parsed;
+        return isNaN(parsed.getTime()) ? undefined : (parsed.setHours(0, 0, 0, 0), parsed);
       }
       const parsed = new Date(raw);
-      return isNaN(parsed.getTime()) ? undefined : parsed;
+      return isNaN(parsed.getTime()) ? undefined : (parsed.setHours(0, 0, 0, 0), parsed);
+    };
+
+    const normalizeEndDate = (date?: Date) => {
+      if (!date) return undefined;
+      const end = new Date(date);
+      end.setHours(23, 59, 59, 999);
+      return end;
     };
 
     const inicioDate = parseDateInput(inicio as string);
-    const fimDate = parseDateInput(fim as string);
+    const fimDate = normalizeEndDate(parseDateInput(fim as string));
 
     if (inicio && !inicioDate) {
       return res.status(400).json({ message: 'Parâmetro "inicio" inválido. Use dd/mm/yyyy.' });
