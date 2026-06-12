@@ -28,6 +28,26 @@ const formatPhone = (value) => {
     .replace(/[- ]$/, "");
 };
 
+const isValidCpf = (value) => {
+  const cpf = (value || "").replace(/\D/g, "");
+  if (!/^\d{11}$/.test(cpf)) return false;
+  if (/^(\d)\1{10}$/.test(cpf)) return false;
+
+  const calcDigit = (digits, factor) => {
+    let total = 0;
+    for (const digit of digits) {
+      total += Number(digit) * factor--;
+    }
+    const remainder = total % 11;
+    return remainder < 2 ? 0 : 11 - remainder;
+  };
+
+  return (
+    calcDigit(cpf.slice(0, 9), 10) === Number(cpf[9]) &&
+    calcDigit(cpf.slice(0, 10), 11) === Number(cpf[10])
+  );
+};
+
 export default function Beneficiarios() {
   const { user } = useAuth();
   const { addToast } = useToast();
@@ -130,8 +150,8 @@ export default function Beneficiarios() {
       return;
     }
     const cpfLimpo = editData.cpf.replace(/\D/g, "");
-    if (cpfLimpo.length !== 11) {
-      addToast("CPF deve ter 11 dígitos.", "warning");
+    if (!isValidCpf(cpfLimpo)) {
+      addToast("CPF inválido. Informe um CPF válido.", "warning");
       return;
     }
     const telefoneLimpo = editData.telefone
@@ -188,8 +208,8 @@ export default function Beneficiarios() {
       return;
     }
     const cpfLimpo = createData.cpf.replace(/\D/g, "");
-    if (cpfLimpo.length !== 11) {
-      addToast("CPF deve ter 11 dígitos.", "warning");
+    if (!isValidCpf(cpfLimpo)) {
+      addToast("CPF inválido. Informe um CPF válido.", "warning");
       return;
     }
     const telefoneLimpo = createData.telefone
@@ -281,9 +301,14 @@ export default function Beneficiarios() {
                 CPF
                 <input
                   type="text"
+                  inputMode="numeric"
+                  pattern="\d*"
                   value={createData.cpf}
                   onChange={(e) =>
-                    setCreateData((f) => ({ ...f, cpf: e.target.value }))
+                    setCreateData((f) => ({
+                      ...f,
+                      cpf: e.target.value.replace(/\D/g, ""),
+                    }))
                   }
                   placeholder="Somente números"
                 />
@@ -376,10 +401,12 @@ export default function Beneficiarios() {
                         {editId === b.id ? (
                           <input
                             value={editData.cpf}
+                            inputMode="numeric"
+                            pattern="\d*"
                             onChange={(e) =>
                               setEditData((f) => ({
                                 ...f,
-                                cpf: e.target.value,
+                                cpf: e.target.value.replace(/\D/g, ""),
                               }))
                             }
                           />
