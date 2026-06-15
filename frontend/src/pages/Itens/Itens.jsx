@@ -4,7 +4,7 @@ import Pagination from "../../components/Pagination";
 import api from "../../services/api";
 import useAuth from "../../hooks/useAuth";
 import useToast from "../../hooks/useToast";
-import { Search, Edit3, Save, RefreshCw } from "lucide-react";
+import { Search, Edit3, RefreshCw } from "lucide-react";
 import "./style.css";
 
 export default function Itens() {
@@ -12,8 +12,14 @@ export default function Itens() {
   const { addToast } = useToast();
 
   const [itens, setItens] = useState([]);
+  const [tipos, setTipos] = useState([]);
+  const [tamanhos, setTamanhos] = useState([]);
+  const [condicoes, setCondicoes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedTipo, setSelectedTipo] = useState("");
+  const [selectedTamanho, setSelectedTamanho] = useState("");
+  const [selectedCondicao, setSelectedCondicao] = useState("");
   const [editingId, setEditingId] = useState(null);
   const [editQuantidade, setEditQuantidade] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -33,11 +39,27 @@ export default function Itens() {
     addToast(message, "error");
   };
 
-  const fetchItens = async () => {
+  const fetchFiltros = async () => {
+    if (!user?.token) return;
+    try {
+      const [tiposRes, tamanhosRes, condicoesRes] = await Promise.all([
+        api.get("/item/tipos", { headers }),
+        api.get("/item/tamanhos", { headers }),
+        api.get("/item/condicoes", { headers }),
+      ]);
+      setTipos(tiposRes.data);
+      setTamanhos(tamanhosRes.data);
+      setCondicoes(condicoesRes.data);
+    } catch (error) {
+      handleApiError(error);
+    }
+  };
+
+  const fetchItens = async (params = {}) => {
     if (!user?.token) return;
     setLoading(true);
     try {
-      const { data } = await api.get("/itens", { headers });
+      const { data } = await api.get("/itens", { headers, params });
       setItens(data);
     } catch (error) {
       handleApiError(error);
@@ -47,9 +69,26 @@ export default function Itens() {
   };
 
   useEffect(() => {
-    fetchItens();
+    fetchFiltros();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.token]);
+
+  useEffect(() => {
+    if (!user?.token) return;
+
+    const timeout = setTimeout(() => {
+      fetchItens({
+        q: searchTerm.trim() || undefined,
+        tipoId: selectedTipo || undefined,
+        tamanhoId: selectedTamanho || undefined,
+        condicaoId: selectedCondicao || undefined,
+      });
+      setPage(1);
+    }, 300);
+
+    return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.token, searchTerm, selectedTipo, selectedTamanho, selectedCondicao]);
 
   const startEdit = (item) => {
     setEditingId(item.id);
@@ -89,28 +128,20 @@ export default function Itens() {
     }
   };
 
-  const filtered = useMemo(() => {
-    const term = searchTerm.trim().toLowerCase();
-    if (!term) return itens;
-    return itens.filter((item) => {
-      const haystack = [
-        item.id,
-        item.quantidadeEstoque,
-        item.tipo?.descricao,
-        item.tamanho?.descricao,
-        item.condicao?.descricao,
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
-      return haystack.includes(term);
-    });
-  }, [itens, searchTerm]);
+  const queryParams = useMemo(
+    () => ({
+      q: searchTerm.trim() || undefined,
+      tipoId: selectedTipo || undefined,
+      tamanhoId: selectedTamanho || undefined,
+      condicaoId: selectedCondicao || undefined,
+    }),
+    [searchTerm, selectedTipo, selectedTamanho, selectedCondicao]
+  );
 
   const paginated = useMemo(() => {
     const start = (page - 1) * PER_PAGE;
-    return filtered.slice(start, start + PER_PAGE);
-  }, [filtered, page]);
+    return itens.slice(start, start + PER_PAGE);
+  }, [itens, page]);
 
   return (
     <Layout>
@@ -122,7 +153,7 @@ export default function Itens() {
           </div>
           <button
             className="ghost-button icon-only"
-            onClick={fetchItens}
+            onClick={() => fetchItens(queryParams)}
             disabled={loading}
             title="Recarregar"
           >
@@ -137,16 +168,72 @@ export default function Itens() {
               <input
                 type="text"
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setPage(1);
+                }}
                 placeholder="Buscar por tipo, tamanho, condição ou quantidade"
               />
+            </div>
+            <div className="filters-row">
+              <div className="filter-select">
+                <label>Tipo</label>
+                <select
+                  value={selectedTipo}
+                  onChange={(e) => {
+                    setSelectedTipo(e.target.value);
+                    setPage(1);
+                  }}
+                >
+                  <option value="">Todos</option>
+                  {tipos.map((tipo) => (
+                    <option key={tipo.id} value={tipo.id}>
+                      {tipo.descricao}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="filter-select">
+                <label>Tamanho</label>
+                <select
+                  value={selectedTamanho}
+                  onChange={(e) => {
+                    setSelectedTamanho(e.target.value);
+                    setPage(1);
+                  }}
+                >
+                  <option value="">Todos</option>
+                  {tamanhos.map((tamanho) => (
+                    <option key={tamanho.id} value={tamanho.id}>
+                      {tamanho.descricao}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="filter-select">
+                <label>Condição</label>
+                <select
+                  value={selectedCondicao}
+                  onChange={(e) => {
+                    setSelectedCondicao(e.target.value);
+                    setPage(1);
+                  }}
+                >
+                  <option value="">Todas</option>
+                  {condicoes.map((condicao) => (
+                    <option key={condicao.id} value={condicao.id}>
+                      {condicao.descricao}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
 
           <div className="list-block">
             {loading ? (
               <p>Carregando itens...</p>
-            ) : filtered.length === 0 ? (
+            ) : itens.length === 0 ? (
               <p>Nenhum item encontrado.</p>
             ) : (
               <table className="itens-table">
@@ -215,7 +302,7 @@ export default function Itens() {
           </div>
           <Pagination
             page={page}
-            totalItems={filtered.length}
+            totalItems={itens.length}
             perPage={PER_PAGE}
             onChange={setPage}
           />
