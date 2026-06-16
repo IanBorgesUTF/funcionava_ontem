@@ -1,7 +1,35 @@
 import { prisma } from '../config/prisma';
 
-export const getAllItensService = async () => {
+export const getAllItensService = async (
+  q?: string,
+  tipoId?: number,
+  tamanhoId?: number,
+  condicaoId?: number
+) => {
+  const where: any = {};
+
+  if (q) {
+    where.OR = [
+      { tipo: { descricao: { contains: q, mode: 'insensitive' } } },
+      { tamanho: { descricao: { contains: q, mode: 'insensitive' } } },
+      { condicao: { descricao: { contains: q, mode: 'insensitive' } } },
+    ];
+  }
+
+  if (tipoId) {
+    where.tipoId = tipoId;
+  }
+
+  if (tamanhoId) {
+    where.tamanhoId = tamanhoId;
+  }
+
+  if (condicaoId) {
+    where.condicaoId = condicaoId;
+  }
+
   return prisma.item.findMany({
+    where: Object.keys(where).length ? where : undefined,
     include: {
       tipo: { select: { id: true, descricao: true } },
       tamanho: { select: { id: true, descricao: true } },

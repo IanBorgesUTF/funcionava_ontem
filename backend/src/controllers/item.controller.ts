@@ -5,9 +5,19 @@ import {
   updateItemQuantidadeService,
 } from '../services/item.service';
 
+const parseQueryNumber = (value: unknown) => {
+  if (typeof value !== 'string') return undefined;
+  const parsed = Number(value);
+  return Number.isInteger(parsed) ? parsed : undefined;
+};
+
 export const getAllItensController = async (_req: Request, res: Response) => {
   try {
-    const itens = await getAllItensService();
+    const q = typeof _req.query.q === 'string' ? _req.query.q.trim() || undefined : undefined;
+    const tipoId = parseQueryNumber(_req.query.tipoId);
+    const tamanhoId = parseQueryNumber(_req.query.tamanhoId);
+    const condicaoId = parseQueryNumber(_req.query.condicaoId);
+    const itens = await getAllItensService(q, tipoId, tamanhoId, condicaoId);
     return res.status(200).json(itens);
   } catch (error) {
     return res.status(500).json({ message: 'Erro ao buscar itens.' });
