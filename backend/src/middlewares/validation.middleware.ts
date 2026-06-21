@@ -6,7 +6,13 @@ export const validate = <T extends z.ZodTypeAny>(schema: T) => {
         const result = schema.safeParse(req.body);
 
         if (!result.success) {
-            return res.status(400).json({ 'Erro de Validação': result.error.issues });
+            const validationMessages = result.error.issues.map((issue) => issue.message).join(' | ');
+            return res.status(400).json({
+                message: validationMessages,
+                errors: result.error.issues,
+                validationErrors: result.error.issues,
+                'Erro de Validação': result.error.issues,
+            });
         }
 
         req.body = result.data as z.infer<T>;

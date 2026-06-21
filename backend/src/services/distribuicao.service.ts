@@ -19,12 +19,19 @@ export const createDistribuicaoService = async (data: CreateDistribuicaoSchemaTy
     if (!voluntario) throw new Error('Voluntário não encontrado.');
     if (!beneficiario) throw new Error('Beneficiário não encontrado.');
 
-    // Beneficiário só pode receber se tiver cartão válido (ativo)
+    // Beneficiário só pode receber se tiver cartão válido, ativo e com número correto
     const cartao = await prisma.cartaoBeneficiario.findUnique({
         where: { beneficiarioId },
     });
-    if (!cartao || !cartao.ativo || cartao.numeroCartao !== cartaoNumero) {
-        throw new Error('Cartão do beneficiário inválido ou inativo.');
+
+    if (!cartao) {
+        throw new Error('Beneficiário não possui cartão cadastrado. Cadastre um cartão antes de registrar a distribuição.');
+    }
+    if (!cartao.ativo) {
+        throw new Error('O cartão do beneficiário está inativo. Ative o cartão antes de registrar a distribuição.');
+    }
+    if (cartao.numeroCartao !== cartaoNumero) {
+        throw new Error('Número do cartão informado inválido. Verifique o número e tente novamente.');
     }
 
     // Verificar estoque para TODOS os itens da lista, buscando pelo composto (tipo/tamanho/condição)

@@ -1,11 +1,11 @@
 import { z } from 'zod';
+import { passwordSchema } from './password.validator';
 
 export const createVoluntarioSchema = z.object({
     nome: z.string({ error: issue => issue.input === undefined ? 'O nome é obrigatório.' : 'O nome deve ser um texto.' })
         .min(3, { message: 'O nome deve ter no mínimo 3 caracteres.' }),
     email: z.email({ error: issue => issue.input === undefined ? 'O email é obrigatório.' : 'Formato de email inválido.' }),
-    senha: z.string({ error: issue => issue.input === undefined ? 'A senha é obrigatória.' : 'A senha deve ser um texto.' })
-        .min(8, { message: 'A senha deve ter no mínimo 8 caracteres.' }),
+    senha: passwordSchema,
     admin: z.boolean({ error: 'O campo admin deve ser booleano.' }).optional().default(false),
     endereco: z.string({ error: 'O endereço deve ser um texto.' }).optional(),
     telefone: z.string({ error: 'O telefone deve ser um texto.' })
@@ -17,7 +17,7 @@ export const createVoluntarioSchema = z.object({
 export const updateVoluntarioSchema = z.object({
     nome: z.string({ error: 'O nome deve ser um texto.' }).min(3).optional(),
     email: z.email({ message: 'Formato de email inválido.' }).optional(),
-    senha: z.string({ error: 'A senha deve ser um texto.' }).min(6).optional(),
+    senha: passwordSchema.optional(),
     admin: z.boolean({ error: 'O campo admin deve ser booleano.' }).optional(),
     endereco: z.string({ error: 'O endereço deve ser um texto.' }).optional(),
     telefone: z.string({ error: 'O telefone deve ser um texto.' })
