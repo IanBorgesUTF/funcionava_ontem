@@ -29,6 +29,8 @@ export default function Voluntarios({ showAdminActions }) {
   });
   const [submitting, setSubmitting] = useState(false);
   const [page, setPage] = useState(1);
+  const [showCreatePassword, setShowCreatePassword] = useState(false);
+  const [showEditPassword, setShowEditPassword] = useState(false);
   const PER_PAGE = 5;
 
   const headers = useMemo(
@@ -81,12 +83,15 @@ export default function Voluntarios({ showAdminActions }) {
       nome: vol.nome || "",
       email: vol.email || "",
       admin: !!vol.admin,
+      senha: "",
     });
+    setShowEditPassword(false);
   };
 
   const cancelEdit = () => {
     setEditId(null);
-    setEditData({ nome: "", email: "", admin: false });
+    setEditData({ nome: "", email: "", admin: false, senha: "" });
+    setShowEditPassword(false);
   };
 
   const handleUpdate = async (id) => {
@@ -100,13 +105,18 @@ export default function Voluntarios({ showAdminActions }) {
     }
     setSubmitting(true);
     try {
+      const updatePayload = {
+        nome: editData.nome.trim(),
+        email: editData.email.trim(),
+        admin: !!editData.admin,
+      };
+      // Incluir senha apenas se foi preenchida
+      if (editData.senha && editData.senha.trim()) {
+        updatePayload.senha = editData.senha;
+      }
       const { data } = await api.put(
         `/voluntarios/${id}`,
-        {
-          nome: editData.nome.trim(),
-          email: editData.email.trim(),
-          admin: !!editData.admin,
-        },
+        updatePayload,
         { headers }
       );
       setVoluntarios((prev) => prev.map((v) => (v.id === id ? data : v)));
@@ -230,14 +240,24 @@ export default function Voluntarios({ showAdminActions }) {
                 </label>
                 <label className="form-label">
                   Senha
-                  <input
-                    type="password"
-                    value={createData.senha}
-                    onChange={(e) =>
-                      setCreateData((f) => ({ ...f, senha: e.target.value }))
-                    }
-                    placeholder="********"
-                  />
+                  <div className="password-input-wrapper">
+                    <input
+                      type={showCreatePassword ? "text" : "password"}
+                      value={createData.senha}
+                      onChange={(e) =>
+                        setCreateData((f) => ({ ...f, senha: e.target.value }))
+                      }
+                      placeholder="********"
+                    />
+                    <button
+                      type="button"
+                      className="toggle-password-btn"
+                      onClick={() => setShowCreatePassword(!showCreatePassword)}
+                      title={showCreatePassword ? "Ocultar senha" : "Mostrar senha"}
+                    >
+                      {showCreatePassword ? "👁️" : "👁️‍🗨️"}
+                    </button>
+                  </div>
                 </label>
                 <label className="checkbox-label">
                   <input
@@ -297,15 +317,38 @@ export default function Voluntarios({ showAdminActions }) {
                       </td>
                       <td>
                         {editId === v.id ? (
-                          <input
-                            value={editData.email}
-                            onChange={(e) =>
-                              setEditData((f) => ({
-                                ...f,
-                                email: e.target.value,
-                              }))
-                            }
-                          />
+                          <>
+                            <input
+                              value={editData.email}
+                              onChange={(e) =>
+                                setEditData((f) => ({
+                                  ...f,
+                                  email: e.target.value,
+                                }))
+                              }
+                            />
+                            {/* Campo de senha para edição */}
+                            <div className="password-input-wrapper" style={{ marginTop: "8px" }}>
+                              <input
+                                type={showEditPassword ? "text" : "password"}
+                                placeholder="Deixar em branco para manter a senha atual"
+                                onChange={(e) =>
+                                  setEditData((f) => ({
+                                    ...f,
+                                    senha: e.target.value,
+                                  }))
+                                }
+                              />
+                              <button
+                                type="button"
+                                className="toggle-password-btn"
+                                onClick={() => setShowEditPassword(!showEditPassword)}
+                                title={showEditPassword ? "Ocultar senha" : "Mostrar senha"}
+                              >
+                                {showEditPassword ? "👁️" : "👁️‍🗨️"}
+                              </button>
+                            </div>
+                          </>
                         ) : (
                           v.email
                         )}
