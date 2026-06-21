@@ -14,7 +14,6 @@ export const createDistribuicaoController = async (req: Request, res: Response) 
         const novaDistribuicao = await createDistribuicaoService(data, req.user.id);
         return res.status(201).json(novaDistribuicao);
     } catch (error: any) {
-        // Erros de negócio (falta de estoque, item não encontrado)
         const msg = error.message || '';
         const lower = msg.toLowerCase();
         if (
@@ -22,7 +21,10 @@ export const createDistribuicaoController = async (req: Request, res: Response) 
             lower.includes('não encontrado') ||
             lower.includes('nao encontrado') ||
             msg.includes('Não encontramos esse item') ||
-            msg.includes('Limite de itens excedido')
+            msg.includes('Limite de itens excedido') ||
+            lower.includes('nao possui cartão cadastrado') ||
+            lower.includes('cartao do beneficiario esta inativo') ||
+            lower.includes('numero do cartão informado inválido')
         ) {
             return res.status(400).json({ message: error.message }); // 400 Bad Request
         }
