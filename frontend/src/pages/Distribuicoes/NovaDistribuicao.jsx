@@ -36,11 +36,16 @@ export default function NovaDistribuicao() {
   );
 
   const handleApiError = (error) => {
+    const valida =
+      error?.response?.data?.['Erro de Validação'] ||
+      error?.response?.data?.errors ||
+      error?.response?.data?.validationErrors;
     const message =
+      (Array.isArray(valida) && valida.map((v) => v.message).join(' | ')) ||
       error?.response?.data?.message ||
       error?.message ||
-      "Não foi possível completar a ação.";
-    addToast(message, "error");
+      'Não foi possível completar a ação.';
+    addToast(message, 'error');
   };
 
   const fetchOptions = async () => {
