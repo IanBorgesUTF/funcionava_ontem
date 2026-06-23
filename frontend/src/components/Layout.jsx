@@ -118,6 +118,7 @@ export default function Layout({ children }) {
     condicoes: "Condições",
     itens: "Itens",
     beneficiarios: "Beneficiários",
+    familiares: "Familiares",
     voluntarios: "Voluntários",
     cartoes: "Cartões",
     doacoes: "Doações",
@@ -218,6 +219,7 @@ export default function Layout({ children }) {
             title="Gerenciar Pessoas"
             links={[
               { label: "Beneficiários", to: "/home/beneficiarios" },
+              { label: "Familiares", to: "/home/familiares" },
               { label: "Voluntários", to: "/home/voluntarios" },
             ]}
             isOpen={!!openSections["Gerenciar Pessoas"]}
