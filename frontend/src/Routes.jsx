@@ -11,6 +11,7 @@ import Tipos from "./pages/Tipos/Tipos";
 import Tamanhos from "./pages/Tamanhos/Tamanhos";
 import Condicoes from "./pages/Condicoes/Condicoes";
 import Beneficiarios from "./pages/Beneficiarios/Beneficiarios";
+import Familiares from "./pages/Familiares/Familiares";
 import Voluntarios from "./pages/Voluntarios/Voluntarios";
 import Itens from "./pages/Itens/Itens";
 import Cartoes from "./pages/Cartoes/Cartoes";
@@ -35,6 +36,7 @@ export function AppRoutes() {
             <Route path="/home/condicoes" element={<Condicoes />} />
             <Route path="/home/itens" element={<Itens />} />
             <Route path="/home/beneficiarios" element={<Beneficiarios />} />
+            <Route path="/home/familiares" element={<Familiares />} />
             <Route path="/home/voluntarios" element={<Voluntarios showAdminActions={false} />} />
             <Route path="/home/voluntarios/admin" element={<Voluntarios showAdminActions={true} />} />
             <Route path="/home/cartoes" element={<Cartoes />} />
