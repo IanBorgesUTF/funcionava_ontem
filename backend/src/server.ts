@@ -18,6 +18,7 @@ import relatorioRoutes from './routes/relatorio.routes';
 
 //rotas de beneficiarios
 import beneficiarioRoutes from './routes/beneficiario.routes';
+import familiarRoutes from './routes/familiar.routes';
 import cartaoRoutes from './routes/cartao.routes';
 
 //rotas de voluntarios
@@ -85,6 +86,7 @@ app.use('/relatorios', relatorioRoutes);
 
 //rotas de beneficiarios
 app.use('/beneficiarios', beneficiarioRoutes);
+app.use('/familiares', familiarRoutes);
 app.use('/cartoes', cartaoRoutes);
 
 //rotas de voluntarios

@@ -50,6 +50,20 @@ model Beneficiario {
 
   distribuicoes Distribuicao[]
   cartoes       CartaoBeneficiario[] @relation("BeneficiarioToCartao")
+  familiares    Familiar[]
+}
+
+model Familiar {
+  id              Int        @id @default(autoincrement())
+  nome            String
+  parentesco      String
+  telefone        String?
+  dataNascimento  DateTime?
+  beneficiarioId  Int
+  createdAt       DateTime   @default(now()) @map("dataCriacao")
+  updatedAt       DateTime   @updatedAt @map("dataAtualizacao")
+
+  beneficiario Beneficiario @relation(fields: [beneficiarioId], references: [id])
 }
 
 model Doacao {

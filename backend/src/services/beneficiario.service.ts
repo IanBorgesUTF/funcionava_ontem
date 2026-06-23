@@ -69,9 +69,13 @@ export const deleteBeneficiarioService = async (id: number) => {
         where: { beneficiarioId: id },
     });
 
-    // Impede a exclusão se houver cartões ou distribuições
-    if (cartoesAssociados > 0 || distribuicoesAssociadas > 0) {
-        throw new Error('Este beneficiário possui cartões ou distribuições associadas e não pode ser removido.');
+    const familiaresAssociados = await prisma.familiar.count({
+        where: { beneficiarioId: id },
+    });
+
+    // Impede a exclusão se houver cartões, distribuições ou familiares
+    if (cartoesAssociados > 0 || distribuicoesAssociadas > 0 || familiaresAssociados > 0) {
+        throw new Error('Este beneficiário possui registros associados e não pode ser removido. Remova primeiro cartões, distribuições e familiares.');
     }
 
     return prisma.beneficiario.delete({ where: { id } });
