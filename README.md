@@ -132,7 +132,7 @@ O nosso projeto tem como objetivo desenvolver um aplicativo para a SANEM, cumpri
 
 ## 🧑‍💻 Contribuindo
 
-Apenas membros da equipe Quarteto Fantástico podem contribuir nesse projeto. Entretanto, possivelmente outra equipe do próximo semestre também contribuirá.
+Apenas membros da equipe Funcionava ontem podem contribuir nesse projeto. Entretanto, possivelmente outra equipe do próximo semestre também contribuirá.
 
 ---
 
@@ -153,6 +153,12 @@ Apenas membros da equipe Quarteto Fantástico podem contribuir nesse projeto. En
 - [Luiz Felipe Bastião](https://github.com/LuizFelipeBastiao) : Front/Back End
 - [Murilo Pistore Moreira Ramos](https://github.com/thebud4) : Scrum Master e Ajuda Geral
 - [Yasmin Yamamoto de Melo](https://github.com/Yasmin-YY) : Front End
+
+### Terceiro Semestre
+
+- [Bruno Rocco Wolfardt](https://github.com/BrunoRocco) : Front/Back End
+- [Felipe Sousa da Costa](https://github.com/Felipe205b) : Front/Back End
+- [Ian Fernandes Borges](https://github.com/IanBorgesUTF) : Scrum Master e Ajuda Geral
 
 ---
 
